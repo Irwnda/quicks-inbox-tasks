@@ -1,7 +1,6 @@
 export const siteConfig = {
-  title: 'Next.js + Tailwind CSS + TypeScript Starter',
+  title: 'Quicks Inbox and Tasks',
   description:
-    'A starter for Next.js, Tailwind CSS, and TypeScript with Absolute Import, Seo, Link component, pre-configured with Husky',
-  /** Without additional '/' on the end, e.g. https://theodorusclarence.com */
+    'Quicks Inbox and Tasks is a simple web app to manage your inbox and tasks. It is built with Next.js and Tailwind CSS.',
   url: 'https://tsnext-tw.thcl.dev',
 };
