@@ -54,7 +54,10 @@ export default function RootLayout({
 }) {
   return (
     <html>
-      <body>{children}</body>
+      <body className='min-w-screen relative flex min-h-screen bg-gray-600'>
+        <aside className='sticky h-screen w-[285px]'></aside>
+        {children}
+      </body>
     </html>
   );
 }

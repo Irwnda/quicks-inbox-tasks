@@ -23,6 +23,12 @@ export default {
           900: 'rgb(var(--tw-color-primary-900) / <alpha-value>)',
           950: 'rgb(var(--tw-color-primary-950) / <alpha-value>)',
         },
+        blue: {
+          1: '#2F80ED',
+        },
+        gray: {
+          1: '#333',
+        },
         dark: '#222222',
       },
       keyframes: {
