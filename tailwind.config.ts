@@ -28,6 +28,7 @@ export default {
         },
         gray: {
           1: '#333',
+          2: '#4F4F4F',
         },
         dark: '#222222',
       },

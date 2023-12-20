@@ -1,3 +1,4 @@
+import { createTheme, MantineProvider } from '@mantine/core';
 import { Metadata } from 'next';
 import * as React from 'react';
 
@@ -47,6 +48,10 @@ export const metadata: Metadata = {
   // ],
 };
 
+const theme = createTheme({
+  cursorType: 'pointer',
+});
+
 export default function RootLayout({
   children,
 }: {
@@ -56,7 +61,7 @@ export default function RootLayout({
     <html>
       <body className='min-w-screen relative flex min-h-screen bg-gray-600'>
         <aside className='sticky h-screen w-[285px]'></aside>
-        {children}
+        <MantineProvider theme={theme}>{children}</MantineProvider>
       </body>
     </html>
   );

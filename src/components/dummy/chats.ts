@@ -1,4 +1,4 @@
-export const user = [
+export const user: User[] = [
   {
     id: 0,
     name: 'Claren',
@@ -13,11 +13,12 @@ export const user = [
   },
 ];
 
-export const groups: Group[] = [
+export const groups: GroupChats[] = [
   {
     id: 1,
     type: 'group',
     name: 'I-589 - AMARKHIL, Obaidullah [Affirmative Filling with ZNH]',
+    numberOfParticipants: 3,
     chats: [
       {
         id: 1,
@@ -78,6 +79,7 @@ export const groups: Group[] = [
     id: 2,
     type: 'private',
     name: 'Fast Visa Support',
+    numberOfParticipants: 2,
     chats: [
       {
         id: 7,
@@ -100,9 +102,19 @@ export type Chat = {
   status: 'read' | 'unread';
 };
 
+export type User = {
+  id: number;
+  name: string;
+};
+
 export type Group = {
   id: number;
   type: 'group' | 'private';
   name: string;
+  numberOfParticipants: number;
+  lastChat?: Omit<Chat, 'id' | 'replyTo'>;
+};
+
+export type GroupChats = Group & {
   chats: Chat[];
 };
