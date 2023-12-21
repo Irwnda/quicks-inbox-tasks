@@ -169,16 +169,8 @@ function PageWrapper({
 }
 
 function InboxPage() {
-  const [isLoading, _] = React.useState(false);
   const [page, setPage] = React.useState('group');
   const [selectedGroup, setSelectedGroup] = React.useState<Group | null>(null);
-
-  if (isLoading)
-    return (
-      <div>
-        <LoadingComponent msg='Loading Chats...' />
-      </div>
-    );
 
   if (page === 'group')
     return <GroupChats setPage={setPage} setSelectedGroup={setSelectedGroup} />;
@@ -191,14 +183,23 @@ function GroupChats(props: {
   setSelectedGroup: React.Dispatch<React.SetStateAction<Group | null>>;
 }) {
   const [chats, setChats] = React.useState<Group[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
     fetch('/api/groups')
       .then((res) => res.json())
       .then((data) => {
         setChats(data);
+        setIsLoading(false);
       });
   }, []);
+
+  if (isLoading)
+    return (
+      <div>
+        <LoadingComponent msg='Loading Chats...' />
+      </div>
+    );
 
   return (
     <div className='flex flex-col divide-y px-8 py-6'>
@@ -314,6 +315,7 @@ function DetailedChats(props: {
   group: Group;
 }) {
   const [participants, setParticipants] = React.useState<number[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [, setFirstUnread] = React.useState<number>(-1);
   const [randomColors, setRandomBackgroundColors] = React.useState<number[]>(
     []
@@ -334,6 +336,10 @@ function DetailedChats(props: {
       chats.findIndex((chat) => chat.sender !== 0 && chat.status === 'unread')
     );
   }, [chats]);
+
+  React.useEffect(() => {
+    if (participants.length && dates.length) setIsLoading(false);
+  }, [dates.length, participants.length]);
 
   React.useEffect(() => {
     fetch(`/api/chats?participants=${props.group.numberOfParticipants}`)
@@ -365,6 +371,13 @@ function DetailedChats(props: {
     });
     setChatWithSenders(chatWithSender);
   }, [chats, users]);
+
+  if (isLoading)
+    return (
+      <div>
+        <LoadingComponent msg='Loading Chats...' />
+      </div>
+    );
 
   return (
     <div className='flex h-full flex-col overflow-hidden'>
