@@ -136,13 +136,20 @@ function TaskItem({
         if (task.id === item.id) {
           return {
             ...task,
-            date: new Date(value?.toISOString() ?? ''),
+            date: new Date(value ?? ''),
           };
         }
         return task;
       })
     );
-  }, [item.id, setTasks, value]);
+
+    if (item.id === -1) {
+      setNewTask((prev) => ({
+        ...prev,
+        date: new Date(value ?? ''),
+      }));
+    }
+  }, [item.id, setNewTask, setTasks, value]);
 
   return (
     <Accordion.Item key={item.id} value={item.id.toString()}>
@@ -187,7 +194,7 @@ function TaskItem({
       <Accordion.Panel>
         <div className='flex items-center gap-4'>
           <GoClock size={24} className='text-blue-1' />
-          <DateInput value={value} onChange={setValue} />
+          <DateInput value={value} onChange={setValue} minDate={new Date()} />
         </div>
         <div className='mt-2 flex gap-4'>
           <button
