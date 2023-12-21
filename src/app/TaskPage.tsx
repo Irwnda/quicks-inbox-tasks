@@ -7,6 +7,7 @@ import {
   Menu,
   Select,
   Textarea,
+  TextInput,
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import React from 'react';
@@ -19,13 +20,15 @@ import { cn } from '@/lib/utils';
 
 import LoadingComponent from '@/app/Loading';
 
-import { Task } from '@/types/tasks';
+import { initialNewTask, Task } from '@/types/tasks';
 
 export default function TasksPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [tasks, setTasks] = React.useState<Task[]>([]);
   const [doneTasks, setDoneTasks] = React.useState<Task[]>([]);
   const [undoneTasks, setUndoneTasks] = React.useState<Task[]>([]);
+  const [addMode, setAddMode] = React.useState(false);
+  const [newTask, setNewTask] = React.useState<Task>(initialNewTask);
 
   React.useEffect(() => {
     fetch('/api/tasks')
@@ -54,15 +57,58 @@ export default function TasksPage() {
           placeholder='My Tasks'
           data={['Personal Errands', 'Urgent To-Do']}
         />
-        <Button>New Task</Button>
+        <Button
+          onClick={() => {
+            if (!addMode) setAddMode(true);
+            else {
+              const tempTasks = [
+                ...tasks,
+                {
+                  ...newTask,
+                  id: tasks.length,
+                },
+              ].sort((a, b) => {
+                if (a.date && b.date)
+                  return (
+                    new Date(a.date).getTime() - new Date(b.date).getTime()
+                  );
+                return 0;
+              });
+
+              setTasks(tempTasks);
+              setNewTask(initialNewTask);
+              setAddMode(false);
+            }
+          }}
+        >
+          New Task
+        </Button>
       </div>
       <Accordion multiple className='mt-4 overflow-y-scroll'>
         {undoneTasks.map((item) => (
-          <TaskItem key={item.id} item={item} setTasks={setTasks} />
+          <TaskItem
+            key={item.id}
+            item={item}
+            setTasks={setTasks}
+            setNewTask={setNewTask}
+          />
         ))}
         {doneTasks.map((item) => (
-          <TaskItem key={item.id} item={item} setTasks={setTasks} />
+          <TaskItem
+            key={item.id}
+            item={item}
+            setTasks={setTasks}
+            setNewTask={setNewTask}
+          />
         ))}
+        {addMode && (
+          <TaskItem
+            key={newTask.id}
+            item={newTask}
+            setTasks={setTasks}
+            setNewTask={setNewTask}
+          />
+        )}
       </Accordion>
     </div>
   );
@@ -71,15 +117,16 @@ export default function TasksPage() {
 function TaskItem({
   item,
   setTasks,
+  setNewTask,
 }: {
   item: Task;
   setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
+  setNewTask: React.Dispatch<React.SetStateAction<Task>>;
 }) {
   const [value, setValue] = React.useState<Date | null>(
     new Date(item.date ?? '')
   );
-  const [editMode, setEditMode] = React.useState(false);
-  const [textAreaValue, setTextAreaValue] = React.useState(item.description);
+  const [editMode, setEditMode] = React.useState(item.id === -1);
 
   React.useEffect(() => {
     setTasks((prev) =>
@@ -95,33 +142,30 @@ function TaskItem({
     );
   }, [item.id, setTasks, value]);
 
-  React.useEffect(() => {
-    if (!editMode)
-      setTasks((prev) =>
-        prev.map((task) => {
-          if (task.id === item.id) {
-            return {
-              ...task,
-              description: textAreaValue,
-            };
-          }
-          return task;
-        })
-      );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editMode]);
   return (
     <Accordion.Item key={item.id} value={item.id.toString()}>
       <AccordionControl index={item.id} setTasks={setTasks} currentTask={item}>
         <div className='mr-4 flex items-center justify-between'>
-          <div
-            className={cn(
-              'text-sm font-semibold',
-              item.status === 'done' && 'text-gray-3 line-through'
-            )}
-          >
-            {item.title}
-          </div>
+          {item.id === -1 ? (
+            <TextInput
+              value={item.title}
+              onChange={(event) => {
+                setNewTask((prev) => ({
+                  ...prev,
+                  title: event.currentTarget?.value ?? '',
+                }));
+              }}
+            />
+          ) : (
+            <div
+              className={cn(
+                'text-sm font-semibold',
+                item.status === 'done' && 'text-gray-3 line-through'
+              )}
+            >
+              {item.title}
+            </div>
+          )}
           <div className='flex items-center gap-4 text-xs'>
             <span
               className={cn(
@@ -154,8 +198,26 @@ function TaskItem({
           {editMode ? (
             <Textarea
               className='w-5/6 text-sm'
-              value={textAreaValue}
-              onChange={(event) => setTextAreaValue(event.currentTarget.value)}
+              value={item.description}
+              onChange={(event) => {
+                if (item.id === -1) {
+                  setNewTask((prev) => ({
+                    ...prev,
+                    description: event.currentTarget?.value ?? '',
+                  }));
+                } else
+                  setTasks((prev) =>
+                    prev.map((task) => {
+                      if (task.id === item.id) {
+                        return {
+                          ...task,
+                          description: event.currentTarget?.value ?? '',
+                        };
+                      }
+                      return task;
+                    })
+                  );
+              }}
             />
           ) : (
             <div className='w-5/6 text-sm'>{item.description}</div>
