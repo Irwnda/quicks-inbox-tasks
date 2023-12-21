@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { NextRequest, NextResponse } from 'next/server';
 
-import { User } from '@/components/dummy/chats';
+import { User } from '@/types/inbox';
 
 export async function GET(request: NextRequest) {
   const searchParams = new URL(request.nextUrl).searchParams;

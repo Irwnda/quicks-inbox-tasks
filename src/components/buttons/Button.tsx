@@ -47,7 +47,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={disabled}
         className={cn(
           'inline-flex items-center rounded font-medium',
-          'focus-visible:ring-primary-500 focus:outline-none focus-visible:ring',
+          'focus-visible:ring-blue-1 focus:outline-none focus-visible:ring',
           'shadow-sm',
           'transition-colors duration-75',
           //#region  //*=========== Size ===========
@@ -59,21 +59,21 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           //#region  //*=========== Variants ===========
           [
             variant === 'primary' && [
-              'bg-primary-500 text-white',
+              'bg-blue-1 text-white',
               'border-primary-600 border',
               'hover:bg-primary-600 hover:text-white',
               'active:bg-primary-700',
               'disabled:bg-primary-700',
             ],
             variant === 'outline' && [
-              'text-primary-500',
-              'border-primary-500 border',
+              'text-blue-1',
+              'border-blue-1 border',
               'hover:bg-primary-50 active:bg-primary-100 disabled:bg-primary-100',
               isDarkBg &&
                 'hover:bg-gray-900 active:bg-gray-800 disabled:bg-gray-800',
             ],
             variant === 'ghost' && [
-              'text-primary-500',
+              'text-blue-1',
               'shadow-none',
               'hover:bg-primary-50 active:bg-primary-100 disabled:bg-primary-100',
               isDarkBg &&
@@ -106,7 +106,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
               {
                 'text-white': ['primary', 'dark'].includes(variant),
                 'text-black': ['light'].includes(variant),
-                'text-primary-500': ['outline', 'ghost'].includes(variant),
+                'text-blue-1': ['outline', 'ghost'].includes(variant),
               }
             )}
           >

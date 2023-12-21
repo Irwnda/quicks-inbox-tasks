@@ -1,7 +1,9 @@
 import { faker } from '@faker-js/faker';
 import { NextRequest, NextResponse } from 'next/server';
 
-import { Chat } from '@/components/dummy/chats';
+import { getDateTimes } from '@/lib/helper';
+
+import { Chat } from '@/types/inbox';
 
 export async function GET(request: NextRequest) {
   const unreadMessages = Math.floor(Math.random() * 10) + 1;
@@ -10,14 +12,7 @@ export async function GET(request: NextRequest) {
   const searchParams = new URL(request.nextUrl).searchParams;
   const numberOfParticipants = Number(searchParams.get('participants') ?? 5);
 
-  const dateTimes: Date[] = [];
-
-  for (let i = 0; i < unreadMessages + readMessages; i++) {
-    const date = faker.date.recent({ days: 3 });
-    dateTimes.push(date);
-  }
-
-  dateTimes.sort((a, b) => a.getTime() - b.getTime());
+  const dateTimes: Date[] = getDateTimes(unreadMessages + readMessages);
 
   for (let i = 0; i < unreadMessages + readMessages; i++) {
     const sender = Math.floor(Math.random() * numberOfParticipants);

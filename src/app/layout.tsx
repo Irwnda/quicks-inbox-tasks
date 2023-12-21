@@ -3,6 +3,7 @@ import { Metadata } from 'next';
 import * as React from 'react';
 
 import '@/styles/globals.css';
+import '@mantine/core/styles.css';
 
 import { siteConfig } from '@/constant/config';
 

@@ -1,11 +1,15 @@
 import { faker } from '@faker-js/faker';
 import { NextResponse } from 'next/server';
 
-import { Group } from '@/components/dummy/chats';
+import { getDateTimes } from '@/lib/helper';
+
+import { Group } from '@/types/inbox';
 
 export async function GET() {
   const groups: Group[] = [];
   const randomCount = Math.floor(Math.random() * 10) + 1;
+
+  const dateTimes: Date[] = getDateTimes(randomCount);
 
   for (let i = 0; i < randomCount; i++) {
     const type = Math.floor(Math.random() * 2) % 2 === 0 ? 'group' : 'private';
@@ -18,7 +22,7 @@ export async function GET() {
       lastChat: {
         sender: 0,
         message: faker.lorem.sentence(),
-        datetime: faker.date.recent(),
+        datetime: dateTimes[i],
         status: Math.floor(Math.random() * 2) % 2 === 0 ? 'read' : 'unread',
       },
     });

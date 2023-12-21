@@ -1,20 +1,31 @@
 'use client';
 
 import { faker } from '@faker-js/faker';
-import { Avatar } from '@mantine/core';
+import {
+  Accordion,
+  AccordionControlProps,
+  Avatar,
+  Center,
+  Checkbox,
+  Menu,
+  Select,
+} from '@mantine/core';
 import Head from 'next/head';
 import * as React from 'react';
-import { BsLightningChargeFill } from 'react-icons/bs';
+import { BsLightningChargeFill, BsThreeDots } from 'react-icons/bs';
 import { FaArrowLeft } from 'react-icons/fa6';
 import { ImSpinner2 } from 'react-icons/im';
 import { PiChatsDuotone } from 'react-icons/pi';
 import { RiBookReadLine } from 'react-icons/ri';
 
+import { getDaysLeft, isDateInRange } from '@/lib/helper';
 import { cn } from '@/lib/utils';
 
 import Button from '@/components/buttons/Button';
 import IconButton from '@/components/buttons/IconButton';
-import { Chat, Group, User } from '@/components/dummy/chats';
+
+import { Chat, Group, User } from '@/types/inbox';
+import { Task } from '@/types/tasks';
 
 /**
  * SVGR Support
@@ -474,10 +485,136 @@ function DetailedChats(props: {
   );
 }
 
-function TasksPage() {
-  const [isLoading, _] = React.useState(true);
+function AccordionControl(
+  props: AccordionControlProps & {
+    index: number;
+    setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
+    currentTask: Task;
+  }
+) {
+  const [showMenu, setShowMenu] = React.useState(false);
+
   return (
-    <div>{isLoading && <LoadingComponent msg='Loading Task List...' />}</div>
+    <Center>
+      <Checkbox
+        checked={props.currentTask.status === 'done'}
+        onChange={(e) => {
+          props.setTasks((prev) =>
+            prev.map((task) => {
+              if (task.id === props.index) {
+                return {
+                  ...task,
+                  status: e.target.checked ? 'done' : 'undone',
+                };
+              }
+              return task;
+            })
+          );
+        }}
+      />
+      <Accordion.Control {...props} />
+      <Menu opened={showMenu} onChange={setShowMenu}>
+        <Menu.Target>
+          <Button variant='ghost'>
+            <BsThreeDots size='1rem' />
+          </Button>
+        </Menu.Target>
+        <Menu.Dropdown>
+          <Menu.Item
+            color='red'
+            onClick={() => {
+              props.setTasks((prev) =>
+                prev.filter((task) => task.id !== props.index)
+              );
+            }}
+          >
+            Delete
+          </Menu.Item>
+        </Menu.Dropdown>
+      </Menu>
+    </Center>
+  );
+}
+
+function TasksPage() {
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [tasks, setTasks] = React.useState<Task[]>([]);
+  const [doneTasks, setDoneTasks] = React.useState<Task[]>([]);
+  const [undoneTasks, setUndoneTasks] = React.useState<Task[]>([]);
+
+  React.useEffect(() => {
+    fetch('/api/tasks')
+      .then((res) => res.json())
+      .then((data) => {
+        setTasks(data);
+        setIsLoading(false);
+      });
+  }, []);
+
+  React.useEffect(() => {
+    setDoneTasks(tasks.filter((task) => task.status === 'done'));
+    setUndoneTasks(tasks.filter((task) => task.status === 'undone'));
+  }, [tasks]);
+
+  if (isLoading)
+    return (
+      <div>{isLoading && <LoadingComponent msg='Loading Task List...' />}</div>
+    );
+
+  return (
+    <div className='flex h-full flex-col overflow-hidden px-8 py-6'>
+      <div className='flex justify-between'>
+        <Select
+          clearable
+          placeholder='My Tasks'
+          data={['Personal Errands', 'Urgent To-Do']}
+        />
+        <Button>New Task</Button>
+      </div>
+      <Accordion multiple className='mt-4 overflow-y-scroll'>
+        {undoneTasks.map((item) => (
+          <TaskItem key={item.id} item={item} setTasks={setTasks} />
+        ))}
+        {doneTasks.map((item) => (
+          <TaskItem key={item.id} item={item} setTasks={setTasks} />
+        ))}
+      </Accordion>
+    </div>
+  );
+}
+
+function TaskItem({
+  item,
+  setTasks,
+}: {
+  item: Task;
+  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
+}) {
+  return (
+    <Accordion.Item key={item.id} value={item.id.toString()}>
+      <AccordionControl index={item.id} setTasks={setTasks} currentTask={item}>
+        <div className='mr-4 flex items-center justify-between'>
+          <div className={cn(item.status === 'done' && 'line-through')}>
+            {item.title}
+          </div>
+          <div className='flex items-center gap-4 text-xs'>
+            <span
+              className={cn(
+                'text-red-500',
+                isDateInRange(new Date(item.date), new Date(), 7) &&
+                  item.status === 'undone'
+                  ? 'block'
+                  : 'hidden'
+              )}
+            >
+              {getDaysLeft(new Date(item.date))}
+            </span>
+            <span>{new Date(item.date).toLocaleDateString()}</span>
+          </div>
+        </div>
+      </AccordionControl>
+      <Accordion.Panel>{item.description}</Accordion.Panel>
+    </Accordion.Item>
   );
 }
 
