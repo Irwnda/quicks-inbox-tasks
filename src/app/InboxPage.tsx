@@ -226,17 +226,21 @@ function DetailedChats(props: {
   }, [newMessageRef.current]);
 
   React.useEffect(() => {
+    setFirstUnread(-1);
     setParticipants(getUnique(chats.map((chat) => chat.sender)));
     setDates(getUniqueDate(chats.map((chat) => chat.datetime)));
-    setLastUserMessageIndex(chats.findLastIndex((chat) => chat.sender === 0));
-    setFirstUnread(-1);
+    setLastUserMessageIndex(
+      chats.length -
+        chats
+          .slice()
+          .reverse()
+          .findIndex((chat) => chat.sender === 0)
+    );
   }, [chats]);
 
   React.useEffect(() => {
-    const unreadChats = chats.filter(
-      (chat, index) => chat.status === 'unread' && index > lastUserMessageIndex
-    );
-    if (unreadChats.length) {
+    const unreadChats = chats.slice(lastUserMessageIndex);
+    if (unreadChats.length > 0) {
       setFirstUnread(unreadChats[0].id);
     }
   }, [chats, lastUserMessageIndex]);
@@ -340,6 +344,7 @@ function DetailedChats(props: {
                       </div>
                     )}
                     <BubbleChat
+                      key={chat.id}
                       chat={chat}
                       chats={chats}
                       randomColors={randomColors}
