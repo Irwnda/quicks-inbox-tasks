@@ -47,6 +47,7 @@ export default function HomePage() {
           onClick={() => {
             activeMenu !== 'tasks' && setActiveMenu('tasks');
             activeMenu !== 'inbox' && setShowMenu(!showMenu);
+            activeMenu === 'inbox' && showMenu && setShowMenu(!showMenu);
           }}
           icon={RiBookReadLine}
           variant='ghost'
@@ -69,6 +70,7 @@ export default function HomePage() {
           onClick={() => {
             activeMenu !== 'inbox' && setActiveMenu('inbox');
             activeMenu !== 'tasks' && setShowMenu(!showMenu);
+            activeMenu === 'tasks' && showMenu && setShowMenu(!showMenu);
           }}
           icon={PiChatsDuotone}
           variant='ghost'
