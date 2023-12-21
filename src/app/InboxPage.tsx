@@ -1,10 +1,11 @@
 import { faker } from '@faker-js/faker';
-import { Avatar, Button } from '@mantine/core';
+import { Avatar } from '@mantine/core';
 import React from 'react';
 import { FaArrowLeft } from 'react-icons/fa6';
 
 import { cn } from '@/lib/utils';
 
+import Button from '@/components/buttons/Button';
 import IconButton from '@/components/buttons/IconButton';
 
 import LoadingComponent from '@/app/Loading';
@@ -45,63 +46,65 @@ function GroupChats(props: {
     );
 
   return (
-    <div className='flex flex-col divide-y px-8 py-6'>
-      {chats.map((chat) => (
-        <Button
-          variant='ghost'
-          key={chat.id}
-          onClick={() => {
-            props.setPage('detailed');
-            props.setSelectedGroup(chat);
-          }}
-          className='flex py-6'
-        >
-          {chat.type === 'private' ? (
-            <Avatar
-              size='xs'
-              src={faker.image.avatar()}
-              className='w-1/6 [&_img]:h-10 [&_img]:w-10 [&_img]:rounded-full'
-            />
-          ) : (
-            <Avatar.Group display='flex' className='w-1/6'>
-              {Array.from({
-                length: Math.min(2, chat.numberOfParticipants),
-              }).map((_, i) => (
+    <div className='flex h-full overflow-hidden py-6 pl-8'>
+      <div className='w-full divide-y overflow-y-scroll'>
+        {chats.map((chat) => (
+          <Button
+            variant='ghost'
+            key={chat.id}
+            onClick={() => {
+              props.setPage('detailed');
+              props.setSelectedGroup(chat);
+            }}
+            className='flex w-full py-6'
+          >
+            {chat.type === 'private' ? (
+              <Avatar.Group display='flex' className='w-1/6'>
                 <Avatar
-                  size='xs'
                   src={faker.image.avatar()}
-                  className={cn(
-                    '[&_img]:h-10 [&_img]:w-10 [&_img]:rounded-full',
-                    i !== 0 && 'ml-[-10px]'
-                  )}
-                  key={i}
+                  className='[&_img]:h-10 [&_img]:w-10 [&_img]:rounded-full'
                 />
-              ))}
-            </Avatar.Group>
-          )}
-          <div className='w-5/6 text-left'>
-            <div className='flex items-center gap-4'>
-              {chat.name}
-              <span className='text-xs text-[#4F4F4F]'>
-                {new Date(chat.lastChat?.datetime ?? '').toLocaleDateString(
-                  'en-US',
-                  {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: 'numeric',
-                    minute: 'numeric',
-                  }
-                )}
-              </span>
+              </Avatar.Group>
+            ) : (
+              <Avatar.Group display='flex' className='w-1/6'>
+                {Array.from({
+                  length: Math.min(2, chat.numberOfParticipants),
+                }).map((_, i) => (
+                  <Avatar
+                    src={faker.image.avatar()}
+                    className={cn(
+                      '[&_img]:h-10 [&_img]:w-10 [&_img]:rounded-full',
+                      i !== 0 && 'ml-[-10px]'
+                    )}
+                    key={i}
+                  />
+                ))}
+              </Avatar.Group>
+            )}
+            <div className='w-5/6 text-left'>
+              <div className='flex items-center gap-4'>
+                {chat.name}
+                <span className='text-xs text-[#4F4F4F]'>
+                  {new Date(chat.lastChat?.datetime ?? '').toLocaleDateString(
+                    'en-US',
+                    {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: 'numeric',
+                    }
+                  )}
+                </span>
+              </div>
+              <div className='mt-2 text-sm text-black'>
+                <div className='font-bold'>{faker.person.fullName()}</div>
+                <div className='font-normal'>{chat.lastChat?.message}</div>
+              </div>
             </div>
-            <div className='mt-2 text-sm text-black'>
-              <div className='font-bold'>{faker.person.fullName()}</div>
-              <div className='font-normal'>{chat.lastChat?.message}</div>
-            </div>
-          </div>
-        </Button>
-      ))}
+          </Button>
+        ))}
+      </div>
     </div>
   );
 }

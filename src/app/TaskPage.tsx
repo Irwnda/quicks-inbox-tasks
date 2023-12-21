@@ -15,6 +15,8 @@ import { BsThreeDots } from 'react-icons/bs';
 import { GoClock } from 'react-icons/go';
 import { HiOutlinePencil } from 'react-icons/hi';
 
+import '@mantine/core/styles.css';
+
 import { getDaysLeft, isDateInRange } from '@/lib/helper';
 import { cn } from '@/lib/utils';
 
@@ -50,8 +52,8 @@ export default function TasksPage() {
     );
 
   return (
-    <div className='flex h-full flex-col overflow-hidden px-8 py-6'>
-      <div className='flex justify-between'>
+    <div className='flex h-full flex-col overflow-hidden py-6 pl-8'>
+      <div className='flex justify-between pr-8'>
         <Select
           clearable
           placeholder='My Tasks'
@@ -84,7 +86,7 @@ export default function TasksPage() {
           New Task
         </Button>
       </div>
-      <Accordion multiple className='mt-4 overflow-y-scroll'>
+      <Accordion multiple className='mt-4 overflow-y-scroll pr-4'>
         {undoneTasks.map((item) => (
           <TaskItem
             key={item.id}
