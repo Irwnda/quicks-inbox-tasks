@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { Avatar } from '@mantine/core';
+import { Avatar, TextInput } from '@mantine/core';
 import React from 'react';
 import { FaArrowLeft } from 'react-icons/fa6';
 
@@ -162,7 +162,8 @@ function DetailedChats(props: {
 }) {
   const [participants, setParticipants] = React.useState<number[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
-  const [, setFirstUnread] = React.useState<number>(-1);
+  const [firstUnread, setFirstUnread] = React.useState<number>(-1);
+  const [lastUserMessageIndex, setLastUserMessageIndex] = React.useState(-1);
   const [randomColors, setRandomBackgroundColors] = React.useState<number[]>(
     []
   );
@@ -174,14 +175,62 @@ function DetailedChats(props: {
       user: User;
     })[]
   >([]);
+  const [isNewMessageTextVisible, setIsNewMessageTextVisible] =
+    React.useState(false);
+  const [newUserMessage, setNewUserMessage] = React.useState('');
+
+  const newMessageRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (newMessageRef.current) {
+      newMessageRef.current.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+
+      const options = {
+        root: null,
+        rootMargin: '0px',
+        threshold: 1,
+      };
+
+      const callback: IntersectionObserverCallback = (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsNewMessageTextVisible(true);
+          } else {
+            setIsNewMessageTextVisible(false);
+          }
+        });
+      };
+
+      const observer = new IntersectionObserver(callback, options);
+
+      if (newMessageRef.current) {
+        observer.observe(newMessageRef.current);
+      }
+
+      // Cleanup the observer on component unmount
+      return () => observer.disconnect();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newMessageRef.current]);
 
   React.useEffect(() => {
     setParticipants(getUnique(chats.map((chat) => chat.sender)));
     setDates(getUniqueDate(chats.map((chat) => chat.datetime)));
-    setFirstUnread(
-      chats.findIndex((chat) => chat.sender !== 0 && chat.status === 'unread')
-    );
+    setLastUserMessageIndex(chats.findLastIndex((chat) => chat.sender === 0));
+    setFirstUnread(-1);
   }, [chats]);
+
+  React.useEffect(() => {
+    const unreadChats = chats.filter(
+      (chat, index) => chat.status === 'unread' && index > lastUserMessageIndex
+    );
+    if (unreadChats.length) {
+      setFirstUnread(unreadChats[0].id);
+    }
+  }, [chats, lastUserMessageIndex]);
 
   React.useEffect(() => {
     if (participants.length && dates.length) setIsLoading(false);
@@ -243,7 +292,7 @@ function DetailedChats(props: {
           </div>
         </div>
       </div>
-      <div className='overflow-y-scroll'>
+      <div className='relative overflow-y-scroll'>
         {dates.map((date, index) => (
           <div key={index} className='py-4'>
             <div className='flex w-full items-center justify-between gap-4 px-8'>
@@ -267,55 +316,118 @@ function DetailedChats(props: {
                   return strDate === date;
                 })
                 .map((chat) => (
-                  <div
-                    key={chat.id}
-                    className={
-                      chat.sender === 0
-                        ? 'flex justify-end'
-                        : 'flex justify-start'
-                    }
-                  >
-                    <div className='w-4/5'>
-                      <p
-                        className={cn(
-                          'rounded-[10px] py-2 text-sm',
-                          //  text-[#E5A443]
-                          chat.sender === 0 && 'text-right'
-                        )}
-                        style={{
-                          color: textColors[randomColors[chat.sender]],
-                        }}
-                      >
-                        {chat.sender === 0
-                          ? 'You'
-                          : chat.user?.name ?? 'No Name'}
-                      </p>
+                  <>
+                    {chat.id === firstUnread && (
                       <div
-                        className={cn(
-                          'text-gray-2 rounded-md p-[10px]'
-                          // bg-[#FCEED3]
-                        )}
-                        style={{
-                          backgroundColor:
-                            backgroundColors[randomColors[chat.sender]],
-                        }}
+                        className='mt-2 flex w-full items-center justify-between gap-4'
+                        ref={newMessageRef}
                       >
-                        <div>{chat.message}</div>
-                        <div className='mt-2 text-xs'>
-                          {new Date(chat.datetime).toLocaleTimeString('en-US', {
-                            hour: 'numeric',
-                            minute: 'numeric',
-                            hour12: false,
-                          })}
+                        <div className='h-0.5 flex-grow bg-[#EB5757]'></div>
+                        <div className='flex items-center justify-center bg-white text-sm font-bold text-[#EB5757]'>
+                          New Message
+                        </div>
+                        <div className='h-0.5 flex-grow bg-[#EB5757]'></div>
+                      </div>
+                    )}
+                    <div
+                      key={chat.id}
+                      className={
+                        chat.sender === 0
+                          ? 'flex justify-end'
+                          : 'flex justify-start'
+                      }
+                    >
+                      <div className='w-4/5'>
+                        <p
+                          className={cn(
+                            'rounded-[10px] py-2 text-sm',
+                            //  text-[#E5A443]
+                            chat.sender === 0 && 'text-right'
+                          )}
+                          style={{
+                            color: textColors[randomColors[chat.sender]],
+                          }}
+                        >
+                          {chat.sender === 0
+                            ? 'You'
+                            : chat.user?.name ?? 'No Name'}
+                        </p>
+                        <div
+                          className={cn(
+                            'text-gray-2 rounded-md p-[10px]'
+                            // bg-[#FCEED3]
+                          )}
+                          style={{
+                            backgroundColor:
+                              backgroundColors[randomColors[chat.sender]],
+                          }}
+                        >
+                          <div>{chat.message}</div>
+                          <div className='mt-2 text-xs'>
+                            {new Date(chat.datetime).toLocaleTimeString(
+                              'en-US',
+                              {
+                                hour: 'numeric',
+                                minute: 'numeric',
+                                hour12: false,
+                              }
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </>
                 ))}
             </div>
           </div>
         ))}
       </div>
+      <Button
+        variant='ghost'
+        onClick={() => {
+          if (newMessageRef.current) {
+            newMessageRef.current.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start',
+            });
+          }
+        }}
+        className={cn(
+          'text-blue-1 absolute bottom-20 left-1/2 rounded-md bg-[#E9F3FF] px-4 py-2 text-sm font-bold',
+          (isNewMessageTextVisible || firstUnread === -1) && 'hidden'
+        )}
+        style={{ transform: 'translateX(-50%)' }}
+      >
+        New Message
+      </Button>
+      <form
+        className='flex justify-between gap-4 px-8 py-4'
+        onSubmit={(e) => {
+          e.preventDefault();
+          const newChat: Chat = {
+            id: chats.length + 1,
+            message: newUserMessage,
+            sender: 0,
+            datetime: new Date(),
+            replyTo: null,
+            status: 'read',
+          };
+          const newChats = [...chats, newChat];
+          setChats(newChats);
+          setNewUserMessage('');
+          setFirstUnread(-1);
+        }}
+      >
+        <TextInput
+          className='w-full'
+          placeholder='Type a new message'
+          value={newUserMessage}
+          onChange={(e) => {
+            setNewUserMessage(e.currentTarget.value);
+          }}
+        />
+        <Button type='submit'>Send</Button>
+      </form>
     </div>
   );
 }
