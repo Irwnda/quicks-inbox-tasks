@@ -20,6 +20,7 @@ export async function GET() {
         .map(() => faker.lorem.sentence())
         .join(' '),
       status: Math.floor(Math.random() * 10) < 3 ? 'done' : 'undone',
+      stickers: [],
     });
   }
 

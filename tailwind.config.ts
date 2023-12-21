@@ -25,6 +25,7 @@ export default {
         },
         blue: {
           1: '#2F80ED',
+          3: '#E5F1FF',
         },
         gray: {
           1: '#333',
