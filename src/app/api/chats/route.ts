@@ -21,7 +21,11 @@ export async function GET(request: NextRequest) {
 
   for (let i = 0; i < unreadMessages + readMessages; i++) {
     const sender = Math.floor(Math.random() * numberOfParticipants);
-    const message = faker.lorem.sentence(Math.floor(Math.random() * 3) + 1);
+    const message = Array.from({
+      length: Math.floor(Math.random() * 2) + 1,
+    })
+      .map(() => faker.lorem.sentence())
+      .join(' ');
     const datetime = dateTimes[i];
     const replyTo = null;
     const status = i >= readMessages ? 'unread' : 'read';
