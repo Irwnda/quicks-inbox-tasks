@@ -1,7 +1,9 @@
 import { faker } from '@faker-js/faker';
-import { Avatar, TextInput } from '@mantine/core';
+import { Avatar, Menu, TextInput } from '@mantine/core';
 import React from 'react';
+import { BsThreeDots } from 'react-icons/bs';
 import { FaArrowLeft } from 'react-icons/fa6';
+import { HiX } from 'react-icons/hi';
 
 import { cn } from '@/lib/utils';
 
@@ -178,8 +180,15 @@ function DetailedChats(props: {
   const [isNewMessageTextVisible, setIsNewMessageTextVisible] =
     React.useState(false);
   const [newUserMessage, setNewUserMessage] = React.useState('');
+  const [messageReply, setMessageReply] = React.useState<
+    | (Chat & {
+        user: User;
+      })
+    | null
+  >(null);
 
   const newMessageRef = React.useRef<HTMLDivElement>(null);
+  const textInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     if (newMessageRef.current) {
@@ -321,6 +330,7 @@ function DetailedChats(props: {
                       <div
                         className='mt-2 flex w-full items-center justify-between gap-4'
                         ref={newMessageRef}
+                        key='new-message'
                       >
                         <div className='h-0.5 flex-grow bg-[#EB5757]'></div>
                         <div className='flex items-center justify-center bg-white text-sm font-bold text-[#EB5757]'>
@@ -329,53 +339,14 @@ function DetailedChats(props: {
                         <div className='h-0.5 flex-grow bg-[#EB5757]'></div>
                       </div>
                     )}
-                    <div
-                      key={chat.id}
-                      className={
-                        chat.sender === 0
-                          ? 'flex justify-end'
-                          : 'flex justify-start'
-                      }
-                    >
-                      <div className='w-4/5'>
-                        <p
-                          className={cn(
-                            'rounded-[10px] py-2 text-sm',
-                            //  text-[#E5A443]
-                            chat.sender === 0 && 'text-right'
-                          )}
-                          style={{
-                            color: textColors[randomColors[chat.sender]],
-                          }}
-                        >
-                          {chat.sender === 0
-                            ? 'You'
-                            : chat.user?.name ?? 'No Name'}
-                        </p>
-                        <div
-                          className={cn(
-                            'text-gray-2 rounded-md p-[10px]'
-                            // bg-[#FCEED3]
-                          )}
-                          style={{
-                            backgroundColor:
-                              backgroundColors[randomColors[chat.sender]],
-                          }}
-                        >
-                          <div>{chat.message}</div>
-                          <div className='mt-2 text-xs'>
-                            {new Date(chat.datetime).toLocaleTimeString(
-                              'en-US',
-                              {
-                                hour: 'numeric',
-                                minute: 'numeric',
-                                hour12: false,
-                              }
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <BubbleChat
+                      chat={chat}
+                      chats={chats}
+                      randomColors={randomColors}
+                      textColors={textColors}
+                      backgroundColors={backgroundColors}
+                      setMessageReply={setMessageReply}
+                    />
                   </>
                 ))}
             </div>
@@ -401,7 +372,7 @@ function DetailedChats(props: {
         New Message
       </Button>
       <form
-        className='flex justify-between gap-4 px-8 py-4'
+        className='relative flex items-end justify-between gap-4 px-8 py-4'
         onSubmit={(e) => {
           e.preventDefault();
           const newChat: Chat = {
@@ -409,25 +380,151 @@ function DetailedChats(props: {
             message: newUserMessage,
             sender: 0,
             datetime: new Date(),
-            replyTo: null,
+            replyTo: messageReply?.id ?? null,
             status: 'read',
           };
+          setMessageReply(null);
           const newChats = [...chats, newChat];
           setChats(newChats);
           setNewUserMessage('');
           setFirstUnread(-1);
         }}
       >
-        <TextInput
-          className='w-full'
-          placeholder='Type a new message'
-          value={newUserMessage}
-          onChange={(e) => {
-            setNewUserMessage(e.currentTarget.value);
-          }}
-        />
-        <Button type='submit'>Send</Button>
+        <div className='w-full'>
+          <div
+            className={cn(
+              'bg-gray-6 absolute bottom-12 rounded-t-lg px-4 py-2',
+              messageReply ? 'block' : 'hidden'
+            )}
+            style={{
+              width: textInputRef.current?.offsetWidth ?? 0,
+            }}
+          >
+            <div className='flex justify-between'>
+              <div className='text-sm font-bold'>
+                Replying to{' '}
+                {messageReply?.user.id ? messageReply?.user.name : 'You'}
+              </div>
+              <button
+                className='text-gray-1 text-sm'
+                onClick={() => {
+                  setMessageReply(null);
+                }}
+                type='button'
+              >
+                <HiX />
+              </button>
+            </div>
+            <p className='line-clamp-3 text-xs'>
+              {messageReply?.message ?? ''}
+            </p>
+          </div>
+          <TextInput
+            ref={textInputRef}
+            placeholder='Type a new message'
+            value={newUserMessage}
+            onChange={(e) => {
+              setNewUserMessage(e.currentTarget.value);
+            }}
+          />
+        </div>
+        <Button type='submit' className='h-fit'>
+          Send
+        </Button>
       </form>
+    </div>
+  );
+}
+
+function BubbleChat({
+  chat,
+  chats,
+  randomColors,
+  textColors,
+  backgroundColors,
+  setMessageReply,
+}: {
+  chat: Chat & { user: User };
+  chats: Chat[];
+  randomColors: number[];
+  textColors: string[];
+  backgroundColors: string[];
+  setMessageReply: React.Dispatch<
+    React.SetStateAction<(Chat & { user: User }) | null>
+  >;
+}) {
+  const [showMenu, setShowMenu] = React.useState(false);
+
+  return (
+    <div
+      key={chat.id}
+      className={chat.sender === 0 ? 'flex justify-end' : 'flex justify-start'}
+    >
+      <div className='w-4/5'>
+        <p
+          className={cn(
+            'mt-2 rounded-[10px] text-sm',
+            //  text-[#E5A443]
+            chat.sender === 0 && 'text-right'
+          )}
+          style={{
+            color: textColors[randomColors[chat.sender]],
+          }}
+        >
+          {chat.sender === 0 ? 'You' : chat.user?.name ?? 'No Name'}
+        </p>
+        <div
+          className={cn(
+            'bg-gray-5 my-2 rounded-md px-4 py-2 text-sm',
+            chat.replyTo ? 'block' : 'hidden'
+          )}
+        >
+          {chats.find((c) => c.id === chat.replyTo)?.message ??
+            'This message has been deleted.'}
+        </div>
+        <div
+          className={cn('flex gap-2', chat.sender === 0 && 'flex-row-reverse')}
+        >
+          <div
+            className={cn(
+              'text-gray-2 rounded-md p-[10px]'
+              // bg-[#FCEED3]
+            )}
+            style={{
+              backgroundColor: backgroundColors[randomColors[chat.sender]],
+            }}
+          >
+            <div>{chat.message}</div>
+            <div className='mt-2 text-xs'>
+              {new Date(chat.datetime).toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: 'numeric',
+                hour12: false,
+              })}
+            </div>
+          </div>
+          <div>
+            <Menu opened={showMenu} onChange={setShowMenu}>
+              <Menu.Target>
+                <Button variant='ghost'>
+                  <BsThreeDots size='1rem' />
+                </Button>
+              </Menu.Target>
+              <Menu.Dropdown>
+                <Menu.Item>Share</Menu.Item>
+                <Menu.Divider />
+                <Menu.Item
+                  onClick={() => {
+                    setMessageReply(chat);
+                  }}
+                >
+                  Reply
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
